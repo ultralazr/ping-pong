@@ -18,8 +18,15 @@ export class Listener {
   }
 
   async loadModel(url) {
-    this.model = await Vosk.createModel(url);
-    this.model.setLogLevel(-1);
+    // The worker resolves relative URLs against its blob: origin root, which drops any
+    // sub-path (e.g. /ping-pong/ on GitHub Pages). Always pass an absolute URL.
+    const absUrl = new URL(url, location.href).href;
+    // Vosk.createModel never rejects on a load error, so wait for load/error ourselves.
+    this.model = await new Promise((resolve, reject) => {
+      const model = new Vosk.Model(absUrl, -1);
+      model.on('load', (m) => (m.result ? resolve(model) : reject(new Error('load failed'))));
+      model.on('error', (m) => reject(new Error(m.error)));
+    });
     this.model.on('error', (m) => this.onError(m.error));
   }
 
