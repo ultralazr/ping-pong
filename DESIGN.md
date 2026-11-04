@@ -129,6 +129,10 @@ Examples below use "Tomate" (left) and "Banane" (right) as point words.
   testing on the PC and as a fallback when recognition fails at the table.
 - Debug line: last partial / final result with confidence, mic level, current recogniser mode.
   Toggleable.
+- **Black screen mode** (button, key B): with the screen really off, Android Chrome keeps the mic
+  but pauses speech synthesis. So instead the page stays visible (wake lock + fullscreen) and shows
+  pure black, which costs almost no power on OLED screens. Announcements keep working; a tap
+  wakes it (the tap is not passed to the buttons underneath).
 - Status: model loading progress, mic active / paused, wake lock active, offline ready.
 
 ## Test plan on the PC (before the phone)

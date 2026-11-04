@@ -80,6 +80,7 @@
       <button data-cmd="3" class="cmd"><span>Neues Spiel</span><small></small></button>
       <button data-cmd="1" class="cmd"><span>Spieler 2</span><small></small></button>
     </div>
+    <button id="btn-black" class="black-btn">Bildschirm schwarz (spart Akku, Ansagen laufen weiter)</button>
     <details id="settings">
       <summary>Einstellungen</summary>
       <label>Mindest-Konfidenz: <b id="thr-val"></b>
@@ -89,7 +90,7 @@
       <p class="muted small">Android: welche deutsche Stimme (männlich/weiblich) verwendet wird, legst du in
         Einstellungen -&gt; Sprachausgabe (Text-in-Sprache) -&gt; Google -&gt; Sprachdaten -&gt; Deutsch fest.</p>
       <label><input id="dbg" type="checkbox"> Diagnose anzeigen</label>
-      <p class="muted">Tasten am PC: 1, 2, U (Rückgängig), N (Neues Spiel)</p>
+      <p class="muted">Tasten am PC: 1, 2, U (Rückgängig), N (Neues Spiel), B (Bildschirm schwarz)</p>
       <div class="row">
         <button id="btn-words">Signalwörter ändern</button>
         <button id="btn-reset">Neue Session</button>
@@ -115,6 +116,12 @@
     <p class="muted small">Pegel = lautester Moment während des Worts. Unter der Markierung
       (-45 dB) ist es zu leise. "[unk]" = etwas gehört, aber keinem Signalwort zugeordnet.</p>
   </section>
+
+  <!-- Black screen mode: display stays on (so announcements keep working), but all pixels are
+       black, which costs almost no power on OLED screens. Tap anywhere to leave. -->
+  <div id="black" hidden>
+    <p id="black-hint">Tippen zum Aufwecken</p>
+  </div>
 
   <script src="vendor/vosk.js"></script>
   <script type="module" src="app.js"></script>

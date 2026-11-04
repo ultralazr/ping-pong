@@ -490,6 +490,45 @@ $('dbg').addEventListener('change', () => {
 });
 $('btn-words').onclick = () => startSetup(true);
 
+// ---------- Black screen mode ----------
+// With the screen really off, Android Chrome keeps the mic but pauses speech synthesis.
+// Instead the page stays visible (wake lock) and shows pure black, which on OLED screens
+// costs almost no power. Fullscreen also hides the status and navigation bars.
+
+let blackHintTimer = null;
+
+function enterBlack() {
+  $('black').hidden = false;
+  $('black-hint').classList.remove('gone');
+  clearTimeout(blackHintTimer);
+  blackHintTimer = setTimeout(() => $('black-hint').classList.add('gone'), 3000);
+  requestWakeLock();
+  const el = document.documentElement;
+  if (el.requestFullscreen && !document.fullscreenElement) {
+    el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+  }
+}
+
+function leaveBlack() {
+  if ($('black').hidden) return;
+  $('black').hidden = true;
+  if (document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+
+$('btn-black').onclick = enterBlack;
+// 'click' (not pointerdown) so the tap cannot fall through to a button underneath.
+$('black').addEventListener('click', leaveBlack);
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.repeat) return;
+  if (e.key === 'Escape') leaveBlack();
+  else if (e.key.toLowerCase() === 'b' && mode === 'play') {
+    if ($('black').hidden) enterBlack();
+    else leaveBlack();
+  }
+});
+
 let resetArmed = false;
 $('btn-reset').onclick = () => {
   if (!resetArmed) {

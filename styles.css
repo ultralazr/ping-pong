@@ -220,3 +220,23 @@ select {
   flex: 1;
   min-width: 0;
 }
+
+/* Black screen mode */
+.black-btn { width: 100%; color: var(--muted); }
+#black {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #000;
+  cursor: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#black[hidden] { display: none; }
+#black-hint {
+  color: #555;
+  font-size: 1.2rem;
+  transition: opacity 1s;
+}
+#black-hint.gone { opacity: 0; }
