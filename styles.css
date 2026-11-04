@@ -209,3 +209,14 @@ details summary { color: var(--muted); cursor: pointer; padding: 6px 0; }
 details label { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
 details input[type="range"] { flex: 1; }
 details input[type="checkbox"] { flex: 0; }
+
+select {
+  font: inherit;
+  color: inherit;
+  background: var(--panel);
+  border: 1px solid #2f3742;
+  border-radius: 10px;
+  padding: 8px 10px;
+  flex: 1;
+  min-width: 0;
+}

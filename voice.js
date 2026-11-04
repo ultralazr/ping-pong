@@ -13,28 +13,51 @@ function cap(w) {
   return w.charAt(0).toUpperCase() + w.slice(1);
 }
 
+// voice = null means "system default for de-DE" (common on Android, where Chrome often lists
+// no voices at all and the Android TTS settings decide which German voice is used).
 let voice = null;
+let preferredName = null;
+
+export function germanVoices() {
+  if (!('speechSynthesis' in window)) return [];
+  return speechSynthesis
+    .getVoices()
+    .filter((v) => v.lang && v.lang.toLowerCase().replace('_', '-').startsWith('de'));
+}
 
 function pickVoice() {
-  const all = speechSynthesis.getVoices();
-  const de = all.filter((v) => v.lang && v.lang.toLowerCase().startsWith('de'));
-  voice = de.find((v) => v.localService) || de[0] || null;
+  const de = germanVoices();
+  voice =
+    (preferredName && de.find((v) => v.name === preferredName)) ||
+    de.find((v) => v.localService) ||
+    de[0] ||
+    null;
   return voice;
 }
 
-// Resolves once voices are known (Chrome loads them asynchronously).
-export function initVoice() {
-  return new Promise((resolve) => {
-    if (!('speechSynthesis' in window)) return resolve(null);
-    if (pickVoice()) return resolve(voice);
-    const done = () => resolve(pickVoice());
-    speechSynthesis.addEventListener('voiceschanged', done, { once: true });
-    setTimeout(done, 2000);
-  });
+// preferred: voice name chosen in the settings, or null for automatic.
+export function setPreferredVoice(name) {
+  preferredName = name || null;
+  pickVoice();
 }
 
+// Picks a voice now and again whenever the browser's voice list changes (it loads
+// asynchronously, sometimes seconds later). onChange is called after every (re)pick.
+export function initVoice(onChange) {
+  if (!('speechSynthesis' in window)) return;
+  const update = () => {
+    pickVoice();
+    if (onChange) onChange();
+  };
+  speechSynthesis.addEventListener('voiceschanged', update);
+  update();
+  setTimeout(update, 2000);
+}
+
+// local: true = on-device voice, false = online voice, null = system default (unknown).
 export function voiceInfo() {
-  if (!voice) return { name: 'keine deutsche Stimme', local: false };
+  if (!('speechSynthesis' in window)) return { name: 'keine Sprachausgabe', local: false };
+  if (!voice) return { name: 'Systemstimme (Deutsch)', local: null };
   return { name: voice.name, local: voice.localService };
 }
 
@@ -55,6 +78,7 @@ export function speak(text) {
   return new Promise((resolve) => {
     if (!('speechSynthesis' in window) || !text) return resolve();
     if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+    if (!voice) pickVoice();
     const spoken = spokenText(text);
     const u = new SpeechSynthesisUtterance(spoken);
     u.lang = 'de-DE';

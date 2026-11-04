@@ -2,6 +2,8 @@ import { deriveState, canApply, PHASE } from './rules.js';
 import {
   initVoice,
   voiceInfo,
+  germanVoices,
+  setPreferredVoice,
   speak,
   unlockSpeech,
   setPlayerNames,
@@ -522,9 +524,38 @@ const modelReady = listener
     throw e;
   });
 
-initVoice().then(() => {
+function showVoice() {
   const v = voiceInfo();
-  pill('st-voice', `Stimme: ${v.name}${v.local ? '' : ' (nicht lokal!)'}`, v.local ? 'ok' : 'bad');
+  if (v.local === null) pill('st-voice', `Stimme: ${v.name}`);
+  else pill('st-voice', `Stimme: ${v.name}${v.local ? '' : ' (online!)'}`, v.local ? 'ok' : 'bad');
+  // Settings dropdown: "automatic" plus every German voice the browser lists.
+  const sel = $('voice-sel');
+  const list = germanVoices();
+  const opts = [['', list.length ? 'Automatisch' : 'Systemstimme (in Android-Einstellungen wählen)']];
+  for (const vo of list) opts.push([vo.name, vo.name + (vo.localService ? '' : ' (online)')]);
+  const sig = JSON.stringify(opts);
+  if (sel.dataset.sig !== sig) {
+    sel.dataset.sig = sig;
+    sel.innerHTML = '';
+    for (const [value, label] of opts) {
+      const o = document.createElement('option');
+      o.value = value;
+      o.textContent = label;
+      sel.appendChild(o);
+    }
+  }
+  sel.value = list.some((vo) => vo.name === store.voice) ? store.voice : '';
+}
+
+setPreferredVoice(store.voice);
+initVoice(showVoice);
+
+$('voice-sel').addEventListener('change', () => {
+  store.voice = $('voice-sel').value || null;
+  save();
+  setPreferredVoice(store.voice);
+  showVoice();
+  say(`Aufschlag ${PLAYER[0]}. Sieben zu fünf.`);
 });
 
 $('btn-start').onclick = async () => {
