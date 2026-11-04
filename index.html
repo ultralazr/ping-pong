@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111418">
+  <title>TT Voice Scorer</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header id="status">
+    <span id="st-model" class="pill">Modell: lädt</span>
+    <span id="st-mic" class="pill">Mikro: an nach Start <i id="level"></i></span>
+    <span id="st-voice" class="pill">Stimme: ?</span>
+    <span id="st-wake" class="pill">Display: ?</span>
+    <span id="st-offline" class="pill">Offline: ?</span>
+  </header>
+
+  <!-- Start overlay: AudioContext and mic need a user gesture -->
+  <section id="start" class="screen">
+    <h1>TT Voice Scorer</h1>
+    <p id="start-msg">Sprachmodell wird geladen (einmalig ca. 45 MB) ...</p>
+    <button id="btn-start" class="big">Start</button>
+  </section>
+
+  <!-- Setup: choose the four signal words -->
+  <section id="setup" class="screen" hidden>
+    <h2>Signalwort <span id="setup-step"></span>/4: <span id="setup-cmd"></span></h2>
+    <p>Sag dein Wort jetzt. Tipp auf das richtige Wort, um es zu übernehmen.</p>
+    <p class="hint">Tipp: deutliche, möglichst zweisilbige Wörter, die beim Spielen sonst nicht fallen
+      (keine Zahlen, kein "ja"/"nein", keine Namen).</p>
+    <div id="setup-heard" class="heard">...</div>
+    <div id="setup-chips" class="chips"></div>
+    <form id="setup-form" class="row">
+      <input id="setup-input" placeholder="oder Wort eintippen" autocomplete="off" autocapitalize="off">
+      <button type="submit">Übernehmen</button>
+    </form>
+    <p id="setup-error" class="error"></p>
+    <ol id="setup-list" class="wordlist"></ol>
+    <div class="row">
+      <button id="setup-back">Zurück</button>
+      <button id="setup-cancel" hidden>Abbrechen</button>
+    </div>
+  </section>
+
+  <!-- Test round: the four words in grammar mode -->
+  <section id="test" class="screen" hidden>
+    <h2>Testrunde <span id="test-step"></span>/4</h2>
+    <p class="prompt">Sag: <b id="test-word"></b> <span id="test-cmd" class="muted"></span></p>
+    <div id="test-heard" class="heard">...</div>
+    <p id="test-result"></p>
+    <div class="row">
+      <button id="test-replace" hidden>Dieses Wort ändern</button>
+      <button id="test-skip">Test überspringen</button>
+      <button id="test-redo">Wörter neu wählen</button>
+    </div>
+  </section>
+
+  <!-- Play -->
+  <section id="play" class="screen" hidden>
+    <div class="board">
+      <div class="player" id="pl0">
+        <div class="name">Spieler 1 <span class="serve" title="Aufschlag">●</span></div>
+        <div class="score">0</div>
+        <div class="games">Spiele: <b>0</b></div>
+      </div>
+      <div class="player" id="pl1">
+        <div class="name">Spieler 2 <span class="serve" title="Aufschlag">●</span></div>
+        <div class="score">0</div>
+        <div class="games">Spiele: <b>0</b></div>
+      </div>
+    </div>
+    <p id="phase-msg" class="phase"></p>
+    <div class="controls">
+      <button data-cmd="0" class="cmd"><span>Spieler 1</span><small></small></button>
+      <button data-cmd="2" class="cmd"><span>Rückgängig</span><small></small></button>
+      <button data-cmd="3" class="cmd"><span>Neues Spiel</span><small></small></button>
+      <button data-cmd="1" class="cmd"><span>Spieler 2</span><small></small></button>
+    </div>
+    <details id="settings">
+      <summary>Einstellungen</summary>
+      <label>Mindest-Konfidenz: <b id="thr-val"></b>
+        <input id="thr" type="range" min="0.3" max="1" step="0.05">
+      </label>
+      <label><input id="dbg" type="checkbox"> Diagnose anzeigen</label>
+      <p class="muted">Tasten am PC: 1, 2, U (Rückgängig), N (Neues Spiel)</p>
+      <div class="row">
+        <button id="btn-words">Signalwörter ändern</button>
+        <button id="btn-reset">Neue Session</button>
+      </div>
+    </details>
+  </section>
+
+  <!-- Diagnostics: mic level and recognition log (toggle in settings) -->
+  <section id="diag" hidden>
+    <div class="meter-row">
+      <span id="mic-state" class="mic-state">Mikro aus</span>
+      <div class="meter" title="Mikrofonpegel">
+        <div id="meter-bar"></div>
+        <div class="meter-quiet" title="darunter: zu leise"></div>
+      </div>
+      <span id="meter-db" class="mono">-- dB</span>
+    </div>
+    <div id="diag-partial" class="mono muted">hört: -</div>
+    <table class="log mono">
+      <thead><tr><th>Zeit</th><th>Gehört (Konfidenz)</th><th>Pegel</th><th>Ergebnis</th></tr></thead>
+      <tbody id="log"></tbody>
+    </table>
+    <p class="muted small">Pegel = lautester Moment während des Worts. Unter der Markierung
+      (-45 dB) ist es zu leise. "[unk]" = etwas gehört, aber keinem Signalwort zugeordnet.</p>
+  </section>
+
+  <script src="vendor/vosk.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

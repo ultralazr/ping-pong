@@ -1,0 +1,12 @@
+{
+  "name": "ping-pong",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline table tennis voice scorer (PWA)",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "start": "node serve.js 8080"
+  },
+  "license": "MIT"
+}
