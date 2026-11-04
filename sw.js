@@ -2,7 +2,7 @@
 // online and everything still loads offline. The speech model is NOT cached here:
 // vosk-browser stores the extracted model in IndexedDB itself and never refetches it.
 
-const CACHE = 'tt-scorer-v1';
+const CACHE = 'tt-scorer-v2';
 const SHELL = [
   './',
   'index.html',
@@ -19,7 +19,7 @@ const SHELL = [
 const NETWORK_TIMEOUT_MS = 3000;
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'no-cache' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -42,8 +42,10 @@ self.addEventListener('fetch', (e) => {
 async function networkFirst(req) {
   const cache = await caches.open(CACHE);
   try {
+    // cache: 'no-cache' revalidates with the server (ETag), bypassing the browser's HTTP cache;
+    // GitHub Pages sends max-age=600, which would otherwise delay updates by up to 10 minutes.
     const res = await Promise.race([
-      fetch(req),
+      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), NETWORK_TIMEOUT_MS)),
     ]);
     if (res.ok) cache.put(req, res.clone());
